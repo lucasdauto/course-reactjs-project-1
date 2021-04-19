@@ -1,35 +1,32 @@
-import './styles.css';
-import { Component } from 'react';
-import { loadPosts } from '../../utils/load-posts';
-import { Posts } from '../../components/Posts';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '../../components/Button';
+import { Posts } from '../../components/Posts';
 import { TextInput } from '../../components/TextInput';
+import { loadPosts } from '../../utils/load-posts';
+import './styles.css';
 
-class Home extends Component {
-  state = {
-    posts: [],
-    allPosts: [],
-    page: 0,
-    postsPerPage: 12,
-    searchValue: '',
-  }
+const Home =  () => {
 
-  async componentDidMount() {
-    await this.loadPosts();
-  }
+  const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
+  const [page, setPage] = useState(0);
+  const [postsPerPage] = useState(12);
+  const [searchValue, setSearchValue] = useState('')
 
-  loadPosts = async () => {
-    const { page, postsPerPage } = this.state;
-
+  const handleLoadPosts = useCallback(async (page, postsPerPage) => {
+    
     const postsAndPhotos = await loadPosts();
-    this.setState({ 
-      posts: postsAndPhotos.slice(page, postsPerPage),
-      allPosts: postsAndPhotos,
-    })
-  }
 
-  loadMorePosts = () => {
-    const { page, postsPerPage, allPosts, posts } = this.state;
+    setPosts(postsAndPhotos.slice(page, postsPerPage));
+    setAllPosts(postsAndPhotos);
+  }, [])
+
+
+  useEffect (() => {
+    handleLoadPosts(0, postsPerPage);
+  }, [handleLoadPosts, postsPerPage]);
+
+  const loadMorePosts = () => {
 
     const nextPage = page + postsPerPage;
     const lastPost = nextPage + postsPerPage;
@@ -38,23 +35,17 @@ class Home extends Component {
 
     posts.push(...nextPosts);
 
-    this.setState({ posts: posts, page: nextPage })
+    setPosts(posts);
+    setPage(nextPage);
   }
 
-  handleChange = (e) => {
-    this.setState({ searchValue: e.target.value })
+  const handleChange = (e) => {
+    const  { value } = e.target;
+    setSearchValue(value);
   }
 
-  render(){
-    const { 
-        posts, 
-        page,
-        postsPerPage, 
-        allPosts, 
-        searchValue 
-      } = this.state;
 
-    const noMorePosts = page + postsPerPage >= allPosts.length;
+  const noMorePosts = page + postsPerPage >= allPosts.length;
     const filteredPosts = !!searchValue ? 
 
     // FILTRA POSTS DE ACORDO COM O STATE QUE VEM DO INPUT DE SEARCH
@@ -62,44 +53,43 @@ class Home extends Component {
       return post.title.toLowerCase()
       .includes(searchValue.toLowerCase());
     }) : posts;
-    
-    return (
-      <section className="container">
-        <div className="search-container">
-          {!!searchValue && (
-            <>
-              <h1>Seach value: { searchValue }</h1>
-            </>
-          )}
-          <TextInput 
-              searchValue={ searchValue }
-              eventChange={ this.handleChange }
-          />
-        </div>
 
-        {filteredPosts.length > 0 && (
-          <Posts posts={ filteredPosts }/>
-        )}
-
-        {filteredPosts.length === 0 && (
+  return (
+    <section className="container">
+      <div className="search-container">
+        {!!searchValue && (
           <>
-            <p>Not exist Posts</p>
+            <h1>Seach value: { searchValue }</h1>
           </>
         )}
-        {!searchValue && (
-          <>
-            <div className="button-container">
-              <Button 
-                text='Next Page'
-                eventClick={ this.loadMorePosts }
-                disabled={noMorePosts}
-              />
-            </div>
-          </>
-        )}
-      </section>
-    );
-  }
+        <TextInput 
+            searchValue={ searchValue }
+            eventChange={ handleChange }
+        />
+      </div>
+
+      {filteredPosts.length > 0 && (
+        <Posts posts={ filteredPosts }/>
+      )}
+
+      {filteredPosts.length === 0 && (
+        <>
+          <p>Not exist Posts</p>
+        </>
+      )}
+      {!searchValue && (
+        <>
+          <div className="button-container">
+            <Button 
+              text='Next Page'
+              eventClick={ loadMorePosts }
+              disabled={noMorePosts}
+            />
+          </div>
+        </>
+      )}
+    </section>
+  );
 }
 
 export default Home;
