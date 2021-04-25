@@ -6,18 +6,18 @@ exports[`<PostCard /> should match snapshot 1`] = `
 >
   <img
     alt="title 1"
-    src="img/test.png"
+    src="img/img.png"
   />
   <div
     class="post-content"
   >
-    <h1>
+    <h2>
       title 1
-       - 
+       
       1
-    </h1>
+    </h2>
     <p>
-      Body 1
+      body 1
     </p>
   </div>
 </div>
